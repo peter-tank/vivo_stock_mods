@@ -1,0 +1,4 @@
+#!/system/bin/sh
+
+echo "/system/bin/aria2c $@" >> /cache/aria2c.log
+/system/bin/aria2c_ "$@"
