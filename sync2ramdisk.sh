@@ -41,8 +41,8 @@ cd "$d" && {
       echo "  + [$?]    new: $f";
     fi
   done
-cd "$_old"
+cd "$_od"
 } || echo "access error: $d"
-echo "patching system/bin/recovery... press enter to continue"
+echo "patching system/bin/recovery not download updates, press enter to continue"
 read
 sed -ie 's|/system/bin/aria2c|/system/bin/aria2_|' "$r/system/bin/recovery";

@@ -8,7 +8,7 @@ rip=""; # ignore online checking
 fip="192.168.1.170" # fallback IP on error.
 port="7777"; # fallback: 7777
 mod="/data/local/tmp/nc_shell/flash.src"; # fallback /data/local/tmp/nc_shell/flash.src, lost script dynamic loading on no access able place. MUST KEEP IN QUOTED.
-log="/data/local/tmp/nc_shell/nc_shell.log"; # forced, changing need service fully reloads. MUST KEEP IN QUOTED.
+log="/data/local/tmp/nc_shell/flash.log"; # forced, changing need service fully reloads. MUST KEEP IN QUOTED.
 RLOG="${RLOG:-"${log}"}"; # DO NOT CHANGE ME, script auto exit on diff with $log
 delay=5; # re-checking timer in seconds, default: 5
 vd="/sys/class/leds/vibrator"; # vibrator device
@@ -18,21 +18,23 @@ ldefault="1800"; # default brightness
 aoffset="1614674534"; # TW_QCOM_ATS_OFFSET, utc: $(( ($(date +%s) - $(cat /sys/class/rtc/rtc0/since_epoch)) ))
 echo "#!$0";
 echo "#PATH=${PATH}";
-# other globals: HEADER_LN DO_OFFSET RLOG dryrun_flash nip nport
+# other globals: HEADER_LN RLOG dryrun_flash nip nport
 # set -x
 # DO NOT T0UCH THIS LINE
-HEADER_LN="$(grep -nm1 -F "# DO NOT T0UCH THIS LINE" "$0" | sed -e 's/^\([0-9]*\):.*$/\1/')"; # cut header line number in this file for building the new .src config file.
 
-_tdiff="$(( ($(date "+%s" 2>/dev/null) - $(cat /sys/class/rtc/rtc0/since_epoch)) ))";
-test "$_tdiff" -lt "10" && DO_OFFSET=true || DO_OFFSET=false;
 #
 # rdate a qcom hard time correction version of date
-# depends: $EPOCHREALTIME $DO_OFFSET $aoffset
+# depends: $aoffset
 rdate () {
-local _fm _rd;
-$DO_OFFSET && test -n "$aoffset" && _rd="-d@$((aoffset + $(date "+%s" 2>/dev/null))) ${1:-"+%D %H:%M:%S"}";
-_fm="${_rd:-"${1:-"+%D %H:%M:%S"}"}";
-date "$_fm" 2>/dev/null;
+local _epoch _fm _rd _tdiff;
+_epoch="/sys/class/rtc/rtc0/since_epoch";
+test -r "$_epoch" && _tdiff="$(( ($(date "+%s" 2>/dev/null) - $(cat "$_epoch")) ))";
+_tdiff="${_tdiff:-"-1"}";
+if test "$_tdiff" -ge "0" && test "$_tdiff" -lt "10" && test -n "$aoffset"; then
+  _rd="-d @$(( (aoffset + $(date "+%s" 2>/dev/null)) )) ${1:-"+%D_%T"}";
+fi
+_fm="${_rd:-"${1:-"+%D_%T"}"}";
+date $_fm 2>/dev/null;
 }
 
 hex2ip () {
@@ -213,8 +215,8 @@ count_key_down () {
 # depends: getevent grep wc
 count_combinds_down () {
   light 5 $lmax,0.1 5 $lmax,0.1 5 $lmax,1;
-  vib 250,4;
-  test "$(getprop "recovery.service" "0")" != "0" && {
+  test "$(getprop "recovery.service" "0")" != "0" && test "$(getprop "ro.twrp.boot" "0")" != "1" && {
+    vib 250,4;
     test "$(getprop "recovery.power_key_long_hold" "0")" -ne 0 && count_key_down "$@" || echo 0;
   } || count_key_down "$@";
 }
@@ -224,13 +226,6 @@ test -w "$node" && rm "$node";
 vib 2000;
 setprop nc_shell.status "stop";
 }
-
-# set -x;
-vib 2000,5;
-test "$(getprop nc_shell.status)" = "running" && exit 1;
-trap bbye EXIT;
-# ps -Af | grep $0 | grep  -qvF "grep" 2>/dev/null && exit 1;
-setprop nc_shell.status "running";
 
 get_header_n () {
 local _header _ln;
@@ -271,15 +266,26 @@ done
 echo "${_llog:-"$1"}";
 }
 
-logs2cache_dir () {
+logs2dir () {
 local _ll;
-_ll="/data/local/tmp/nc_shell/ls_${1}.log";
-mkdir "$_ll" && cp -varf /tmp/ls_*.log "$_ll";
+_ll="${1}";
+mkdir -p "$_ll" && cp -varf /tmp/ls_*.log "$_ll";
 }
+
+test "$(getprop nc_shell.status)" = "running" && exit 1;
+trap bbye EXIT;
+# ps -Af | grep $0 | grep  -qvF "grep" 2>/dev/null && exit 1;
+setprop nc_shell.status "running";
+
+#set -x;
+setenforce 0
+vib 2000,5;
+HEADER_LN="$(grep -nm1 -F "# DO NOT T0UCH THIS LINE" "$0" | sed -e 's/^\([0-9]*\):.*$/\1/')"; # cut header line number in this file for building the new .src config file.
+
 log="$(get_ready_logs "$mod" "$log")";
 if test ! -w "$(dirname "$log")"; then
   log="/tmp/nc_shell_tmp.log";
-  test -w "$(dirname "$log")" || log="/dev/stdout";
+  test -w "$(dirname "$log")" || log="/proc/self/fd/0";
 fi
 RLOG="$log";
 echo "#logs redirected to: $RLOG";
@@ -357,10 +363,10 @@ if test "$RLOG" != "$log"; then
 elif test -f "/tmp/reload_nc" && test ! -f "/tmp/copy_out" && test ! -f "/cache/copy_out"; then
 #test "$(getprop recovery.crypto.decrypt.result)" = "success"; then
   test -d "/data/local/tmp/nc_shell" && {
-    logs2cache_dir "$(rdate +%s)";
+    logs2dir "/data/local/tmp/nc_shell/ls_$(rdate +%s)";
     touch "/tmp/copy_out";
     touch "/cache/copy_out";
-    rm "/tmp/reload_nc";
+    rm "/cache/reload_nc";
     sleep 1; exit;
   }
 fi
