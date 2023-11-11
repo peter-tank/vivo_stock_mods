@@ -296,18 +296,24 @@ vendor.vivo.softap.maxsta=
 ├── props_platform.txt
 ├── recovery
 │   └── root
+│       ├── init.recovery.platform.rc
 │       ├── init.recovery.touch.rc
 │       ├── init.recovery.wifi.rc
 │       ├── prop.default
-│       └── system
-│           └── bin
-│               ├── aria2_
-│               ├── nc_shell.sh
-│               └── rec_log.sh
+│       ├── system
+│       │   ├── bin
+│       │   │   ├── aria2_
+│       │   │   ├── nc_shell.sh
+│       │   │   └── rec_log.sh
+│       │   └── etc
+│       └── vendor
+│           └── lib
+│               └── modules
+│                   └── vivo-fuel_summary.ko
 ├── so
 ├── stock.sh
 ├── sync2ramdisk.sh
 └── whitelist
 
-5 directories, 17 files
+9 directories, 19 files
 ```

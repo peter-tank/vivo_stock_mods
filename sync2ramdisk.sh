@@ -45,4 +45,10 @@ cd "$_od"
 } || echo "access error: $d"
 echo "patching system/bin/recovery not download updates, press enter to continue"
 read
-sed -ie 's|/system/bin/aria2c|/system/bin/aria2_|' "$r/system/bin/recovery";
+sed -i 's|/system/bin/aria2c|/system/bin/aria2_|' "$r/system/bin/recovery";
+echo "Press entery continue mod log..."
+read
+sed -i 's|/tmp/recovery.log|/cache/recovery.g|' "$r/system/bin/recovery";
+sed -i 's|/tmp/guardianangle.log|/cache/guardianangle.g|' "$r/system/bin/recovery";
+sed -i 's|/tmp/recovery.log|/cache/recovery.g|' "$r/system/bin/guardianangle";
+sed -i 's|/tmp/guardianangle.log|/cache/guardianangle.g|' "$r/system/bin/guardianangle";

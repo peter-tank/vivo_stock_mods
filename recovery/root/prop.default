@@ -115,7 +115,7 @@ ro.product.cpu.abi=arm64-v8a
 ro.product.cpu.abilist=arm64-v8a,armeabi-v7a,armeabi
 ro.product.cpu.abilist32=armeabi-v7a,armeabi
 ro.product.cpu.abilist64=arm64-v8a
-ro.product.locale=zh-CN
+ro.product.locale=en-US
 ro.wifi.channels=
 ro.vivo.os.build.display.id=Funtouch OS_10.5
 ro.vivo.op.entry.version=
@@ -320,7 +320,7 @@ ro.kernel.qemu.gles=0
 qemu.hw.mainkeys=0
 
 #Enable ULMK properties
-ro.lmk.kill_heaviest_task=true
+ro.lmk.kill_heaviest_task=false
 ro.lmk.kill_timeout_ms=15
 
 #Expose aux camera for below packages
@@ -538,8 +538,8 @@ ro.config.superx_b_sound=/system/media/audio/ui/SuperX_b.ogg
 ro.config.alarm_component_sound=/system/media/audio/ui/success.ogg
 ro.config.musicplayer_open=/system/media/audio/ui/MusicPlayer_open.ogg
 ro.config.musicplayer_close=/system/media/audio/ui/MusicPlayer_close.ogg
-ro.lmk.kill_heaviest_task=true
-ro.lmk.use_minfree_levels=true
+ro.lmk.kill_heaviest_task=false
+ro.lmk.use_minfree_levels=false
 dalvik.vm.heapgrowthlimit=256m
 dalvik.vm.heapsize=512m
 external_storage.projid.enabled=1
@@ -736,7 +736,7 @@ ro.setupwizard.wifi_on_exit=false
 ro.setupwizard.stat_bar_disable=0x00010000
 config.disable_consumerir=true
 qemu.hw.mainkeys=0
-persist.sys.disable_rescue=true
+#persist.sys.disable_rescue=true
 ro.vendor.vivo.product.overseas=no
 ro.vendor.vivo.product.platform=SM4350
 ro.vendor.vivo.hardware.version=PD2054MA

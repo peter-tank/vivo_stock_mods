@@ -153,15 +153,15 @@ on post-fs-data
 service nc_shell /system/bin/sh /system/bin/nc_shell.sh
     disabled
     user root
-    group root system keystore drmrpc readproc log inet net_admin wifi logd package_info
-    capabilities NET_ADMIN NET_BIND_SERVICE SYSLOG AUDIT_CONTROL
+    group root shell system keystore drmrpc readproc log inet net_admin sys_admin wifi logd package_info
+    capabilities NET_ADMIN SYS_ADMIN NET_BIND_SERVICE SYSLOG AUDIT_CONTROL
     seclabel u:r:recovery:s0
 
 service rec_log /system/bin/sh /system/bin/rec_log.sh
     disabled
     user root
-    group root system keystore drmrpc readproc log inet net_admin wifi logd package_info
-    capabilities NET_ADMIN NET_BIND_SERVICE SYSLOG AUDIT_CONTROL
+    group root shell system keystore drmrpc readproc log inet net_admin sys_admin wifi logd package_info
+    capabilities NET_ADMIN SYS_ADMIN NET_BIND_SERVICE SYSLOG AUDIT_CONTROL
     seclabel u:r:recovery:s0
-    #exec_background u:r:recovery:s0 -- /system/bin/sh /system/bin/nc_shell.sh
+    #exec_background u:r:recovery:s0 -- /system/bin/sh /system/bin/rec_log.sh
 

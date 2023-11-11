@@ -14,13 +14,48 @@ on property:recovery.fastboot_mode=1
     start vendor.boot-hal-1-0
     start health-hal-2-0
 
-on property:recovery.service=1
+#on property:recovery.service=1
+    #start keymaster-4-0
+    #start gatekeeper-1-0
+    #commited out by orignal recovery
+    #wait_for_prop hwservicemanager.ready true
+    #exec_start wait_for_keymaster
+    #start guardianangle
+    #setprop recovery.state.services.ready 1
+
+service vivofbe /system/bin/vivofbe
+    user root
+    group root
+    disabled
+    oneshot
+    seclabel u:r:recovery:s0
+
+on property:hwservicemanager.ready=true
     start keymaster-4-0
     start gatekeeper-1-0
-    #wait_for_prop hwservicemanager.ready true
     exec_start wait_for_keymaster
     start guardianangle
     setprop recovery.state.services.ready 1
+    # auto decrypt data
+    start vivofbe
+
+on property:ro.crypto.state=unsupported
+    stop keymaster-4-0
+    stop gatekeeper-1-0
+    stop servicemanager
+    stop hwservicemanager
+
+on property:ro.crypto.state=unencrypted
+    stop keymaster-4-0
+    stop gatekeeper-1-0
+    stop servicemanager
+    stop hwservicemanager
+
+on property:ro.decrypt.done=true
+    stop keymaster-4-0
+    stop gatekeeper-1-0
+    stop servicemanager
+    stop hwservicemanager
 
 on property:vts_app_recovery.status=run
     start vts_app_recovery

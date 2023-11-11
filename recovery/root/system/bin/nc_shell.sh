@@ -113,13 +113,16 @@ light () {
 
 # 
 # ddf ()
-# force flash all <block_name>-xxx.img under working dir.
-# depends: dd $PWD $dryrun_flash=0|1
+# sha2 check and flash all <block_name>.emmc.win{,.sha2} under working dir.
+# depends: dd sha256sum $PWD $dryrun_flash=0|1
 ddf () {
 local img dst;
 light $lmax,1;
-for img in *.img; do
-  dst="/dev/block/by-name/$(echo $img|cut -d'-' -f1)";
+for img in *.emmc.win; do
+  sha256sum -cs "$img.sha2" 2>/dev/null || continue;
+  dst="${img%%.*}";
+  cat "$dst.info" 2>/dev/null;
+  dst="/dev/block/by-name/$dst";
   if test $dryrun_flash -eq 1; then
     echo "  > dryrun: dd bs=4k if="$PWD/$img" of="$dst"";
     vib 1000,${delay:-5};
@@ -131,7 +134,7 @@ for img in *.img; do
   else
     echo "  !!! no dev block: <$dst>";
     echo "  ? on: dd bs=4k if="$PWD/$img" of="$dst"";
-    vib 500,0.5 500,${delay:-5}
+    vib 500,0.5 500,${delay:-5};
   fi
 done
 light $ldefault;
@@ -139,8 +142,8 @@ light $ldefault;
 
 # 
 # check_do_flash <flash step dir name from workdir>
-# depends: find sed sort ddf md5sum
-# . pwd/dir pwd/dir/0 pwd/dir/0.md5sum pwd/dir/0/<block_name>-xxx.img
+# depends: find sed sort ddf
+# . pwd/dir pwd/dir/0* pwd/dir/0/<block_name>.emmc.win{,.sha2}
 check_do_flash  () {
 local _sl _fl _id _step imgd;
 test -n "$1" || return 1
@@ -166,14 +169,13 @@ for imgd in ${_fl}; do
   _id="$PWD/$imgd";
   test "$_sl" -ne 1 && _sl="$((_sl-1))" && continue;
   echo "  #$_id...";
-  if test -d "${_id}" && test -f  "${_id}.md5sum"; then
-    cd "$imgd" && {
-      md5sum -c "../${imgd}.md5sum" 2>&1 >/dev/null;
-      test $? -eq 0 && ddf || echo "  * error: md5sum or failure on flashing!";
+  if test -d "${_id}"; then
+    cd "$imgd" && ls -A *.emmc.win.sha2 2>/dev/null && {
+      test $? -eq 0 && ddf || echo "  * error: sha256sum file missing!";
       cd ../;
-    } || echo "  * access error on: $imgd"    
+    } || echo "  * not a twrp dd backup dir: $imgd/*.emmc.win.sha2"
   else
-    echo "  ! no ${imgd}.md5sum, skiped."
+    echo "  ! not a dir: ${imgd}, skiped."
   fi
   echo;
   test "$_sl" -eq 1 && break;
@@ -270,6 +272,7 @@ logs2dir () {
 local _ll;
 _ll="${1}";
 mkdir -p "$_ll" && cp -varf /tmp/ls_*.log "$_ll";
+chown -R 2000:2000 "$_ll";
 }
 
 test "$(getprop nc_shell.status)" = "running" && exit 1;
@@ -357,7 +360,7 @@ test -p "$node" && {
 log="$(get_ready_logs "$mod" "$log")"; # auto exit on deepest new log ready.
 if test "$RLOG" != "$log"; then
   test -d "/tmp/" && {
-    ls -Rlaph / > "/tmp/ls_$(rdate +%s).log";
+    ls -Rlaph / > "/tmp/ls_${mod##*/}.log";
     touch "/tmp/reload_nc";
   }
 elif test -f "/tmp/reload_nc" && test ! -f "/tmp/copy_out" && test ! -f "/cache/copy_out"; then

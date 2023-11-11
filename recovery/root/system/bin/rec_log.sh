@@ -61,8 +61,12 @@ while true; do
     _log_props;
     _log_dirs;
   done
-  test -w "/data/local/tmp/nc_shell" && cp -rf /tmp/*.log /data/local/tmp/nc_shell;
-  touch "/data/local/tmp/nc_shell/props.test";
+  test -w "/data/local/tmp/nc_shell" && {
+    cp -rf /cache/*.log /data/local/tmp/nc_shell;
+    cp -rf /tmp/*.log /data/local/tmp/nc_shell;
+    touch "/data/local/tmp/nc_shell/props.test";
+    chown -R 2000:2000 /data/local/tmp/nc_shell/*.log;
+  }
   test -r "/data/local/tmp/nc_shell/props.test" && {
     for _p in "$(cat "/data/local/tmp/nc_shell/props.test" | grep -v "^#")"; do
     _p="$(cut -d'|' -f1)";
