@@ -118,7 +118,7 @@ light () {
 ddf () {
 local img dst;
 light $lmax,1;
-for img in *.emmc.win; do
+find . -maxdepth 1 -type f -name "*.emmc.win" | while read -r img; do
   sha256sum -cs "$img.sha2" 2>/dev/null || continue;
   dst="${img%%.*}";
   cat "$dst.info" 2>/dev/null;
@@ -148,7 +148,8 @@ check_do_flash  () {
 local _sl _fl _id _step imgd;
 test -n "$1" || return 1
 cd "$1" || return 2
-_fl="$(find . -mindepth 1 -maxdepth 1 -type d -print | sed -e 's|^..||' | sort)";
+_fl="$(find . -mindepth 1 -maxdepth 1 -type d -print | sed -e 's|^\./||' | sort)";
+echo "$_fl" | while read -r _sl; do test -n "$_sl" && vib 200,0.2; done
 
 _sl="$(count_key_down "VU" "5s")";
 test "$_sl" -eq 0 && echo "  ? selection timer out in 5s." && return 3;
@@ -165,12 +166,13 @@ for _step in $(seq 1 "$_sl"); do vib 200,0.2; done
 echo "  ! confirmed flash step: [$_sl]";
 light $ldefault;
 
-for imgd in ${_fl}; do
-  _id="$PWD/$imgd";
+echo "$_fl" | while read -r imgd; do
+  test -z "$imgd" && continue;
   test "$_sl" -ne 1 && _sl="$((_sl-1))" && continue;
+  _id="$PWD/$imgd";
   echo "  #$_id...";
   if test -d "${_id}"; then
-    cd "$imgd" && ls -A *.emmc.win.sha2 2>/dev/null && {
+    ls -A $imgd/*.emmc.win.sha2 2>&1 >/dev/null && cd "$imgd" && {
       test $? -eq 0 && ddf || echo "  * error: sha256sum file missing!";
       cd ../;
     } || echo "  * not a twrp dd backup dir: $imgd/*.emmc.win.sha2"
