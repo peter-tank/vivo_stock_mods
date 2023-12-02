@@ -120,6 +120,7 @@ local img dst;
 light $lmax,1;
 find . -maxdepth 1 -type f -name "*.emmc.win" | while read -r img; do
   sha256sum -cs "$img.sha2" 2>/dev/null || continue;
+  img="${img:2}";
   dst="${img%%.*}";
   cat "$dst.info" 2>/dev/null;
   dst="/dev/block/by-name/$dst";
